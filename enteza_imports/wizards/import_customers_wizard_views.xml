@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del formulario del wizard -->
+    <record id="view_import_customers_wizard_form" model="ir.ui.view">
+        <field name="name">import.customers.wizard.form</field>
+        <field name="model">import.customers.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Importar Clientes desde Excel">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="file" filename="filename" widget="binary"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not context.get('show_log')">
+                        <field name="import_log" nolabel="1" colspan="2"
+                               widget="text" readonly="1"/>
+                    </group>
+
+                    <notebook invisible="not context.get('show_log')">
+                        <page string="Instrucciones">
+                            <group>
+                                <div style="margin: 10px;">
+                                    <h3>Formato del archivo Excel:</h3>
+                                    <ul>
+                                        <li><strong>Columna B:</strong> Nombre del cliente (requerido)</li>
+                                        <li><strong>Columna C:</strong> Dirección</li>
+                                        <li><strong>Columna F:</strong> Código Postal</li>
+                                        <li><strong>Columna G:</strong> Ciudad</li>
+                                        <li><strong>Columna H:</strong> Estado (no se guarda si es numérico)</li>
+                                        <li><strong>Columna I:</strong> Teléfono</li>
+                                        <li><strong>Columna J:</strong> Teléfono 2</li>
+                                        <li><strong>Columna L:</strong> Dirección de facturación (si es diferente a C)</li>
+                                        <li><strong>Columna Q:</strong> Referencia</li>
+                                        <li><strong>Columna S:</strong> Email</li>
+                                        <li><strong>Columna Y:</strong> Descripción 1 (solo si es diferente a "falso")</li>
+                                        <li><strong>Columna Z:</strong> Descripción 2</li>
+                                    </ul>
+                                    <p><em>Nota: La primera fila se considera como encabezados y será ignorada.</em></p>
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <footer>
+                    <button name="action_import_customers"
+                            string="Importar"
+                            type="object"
+                            class="btn-primary"
+                            invisible="context.get('show_log')"/>
+                    <button string="Cerrar"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción para abrir el wizard -->
+    <record id="action_import_customers_wizard" model="ir.actions.act_window">
+        <field name="name">Importar Clientes</field>
+        <field name="res_model">import.customers.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Acción de servidor para el botón -->
+    <record id="action_import_customers_button" model="ir.actions.server">
+        <field name="name">Importar Clientes desde Excel</field>
+        <field name="model_id" ref="base.model_res_partner"/>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Importar Clientes',
+    'res_model': 'import.customers.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': context,
+}
+        </field>
+    </record>
+
+    <!-- Menú para acceder al wizard desde Contactos -->
+    <menuitem id="menu_import_customers"
+              name="Importar Clientes"
+              parent="contacts.menu_contacts"
+              action="action_import_customers_wizard"
+              sequence="10"/>
+
+</odoo>
+
