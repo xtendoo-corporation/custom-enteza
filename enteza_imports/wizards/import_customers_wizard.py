@@ -188,7 +188,8 @@ class ImportCustomersWizard(models.TransientModel):
                     # Manejar descripciones
                     comment_parts = []
                     if description_y and description_y.lower() not in ['falso', 'false', '']:
-                        comment_parts.append(description_y)
+                        # Si description_y es verdadero, poner el texto requerido
+                        comment_parts.append('Requiere factura anticipada, ')
                     if description_z:
                         comment_parts.append(description_z)
                     if comment_parts:
