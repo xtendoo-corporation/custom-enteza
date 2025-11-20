@@ -157,6 +157,33 @@ class ImportProductsWizard(models.TransientModel):
                         except Exception as e:
                             log_messages.append(f'  └─ Error actualizando stock: {str(e)}')
 
+                    # Crear o actualizar tarifa de alquiler para periodo 'Evento'
+                    if alquiler:
+                        RentalPricing = self.env['product.pricing']
+                        # Buscar la tarifa de precios por defecto
+                        pricelist = self.env['product.pricelist'].search([('active', '=', True)], limit=1)
+                        # Buscar si ya existe tarifa para este producto, recurrencia y lista de precios
+                        pricing = RentalPricing.search([
+                            ('product_template_id', '=', product.product_tmpl_id.id),
+                            ('recurrence_id.name', '=', 'Evento'),
+                            ('pricelist_id', '=', pricelist.id if pricelist else False)
+                        ], limit=1)
+                        if pricing:
+                            pricing.write({'price': float(alquiler)})
+                            log_messages.append(f'  └─ Tarifa de alquiler (Evento) actualizada: {alquiler} (Tarifa: {pricelist.name if pricelist else "N/A"})')
+                        else:
+                            # Buscar la recurrencia 'Evento' en sale.temporal.recurrence
+                            recurrence = self.env['sale.temporal.recurrence'].search([('name', '=', 'Evento')], limit=1)
+                            if not recurrence:
+                                recurrence = self.env['sale.temporal.recurrence'].create({'name': 'Evento'})
+                            RentalPricing.create({
+                                'product_template_id': product.product_tmpl_id.id,
+                                'recurrence_id': recurrence.id,
+                                'pricelist_id': pricelist.id if pricelist else False,
+                                'price': float(alquiler),
+                            })
+                            log_messages.append(f'  └─ Tarifa de alquiler (Evento) creada: {alquiler} (Tarifa: {pricelist.name if pricelist else "N/A"})')
+
                 except Exception as e:
                     error_count += 1
                     error_msg = str(e)
