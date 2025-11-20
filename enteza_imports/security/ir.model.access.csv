@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_import_customers_wizard,access_import_customers_wizard,model_import_customers_wizard,base.group_user,1,1,1,1
+access_import_products_wizard,access_import_products_wizard,enteza_imports.model_import_products_wizard,base.group_user,1,1,1,1
 

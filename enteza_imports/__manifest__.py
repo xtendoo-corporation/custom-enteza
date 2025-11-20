@@ -21,9 +21,9 @@
     'data': [
         'security/ir.model.access.csv',
         'wizards/import_customers_wizard_views.xml',
+        'wizards/import_products_wizard_view.xml',
     ],
     'installable': True,
     'application': False,
     'auto_install': False,
 }
-
