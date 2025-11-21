@@ -14,6 +14,7 @@
     'depends': [
         'base',
         'contacts',
+        'sale_renting',
     ],
     'external_dependencies': {
         'python': ['openpyxl'],
@@ -22,6 +23,7 @@
         'security/ir.model.access.csv',
         'wizards/import_customers_wizard_views.xml',
         'wizards/import_products_wizard_view.xml',
+        'wizards/import_rental_orders_wizard_view.xml',
     ],
     'installable': True,
     'application': False,
