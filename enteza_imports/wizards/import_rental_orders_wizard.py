@@ -141,8 +141,6 @@ class ImportRentalOrdersWizard(models.TransientModel):
             Pricelist = self.env['product.pricelist']
             RentalOrder = self.env['sale.order']
             RentalOrderLine = self.env['sale.order.line']
-            StockPicking = self.env['stock.picking']
-            StockPickingType = self.env['stock.picking.type']
 
             pricelist = Pricelist.search([('active', '=', True)], limit=1)
 
@@ -153,6 +151,7 @@ class ImportRentalOrdersWizard(models.TransientModel):
                         log_messages.append(f'  └─ Cliente NO encontrado: {order_data["customer_name"]} (pedido {origin})')
                         continue
 
+                    # Crear el pedido con el contexto de alquiler
                     order_vals = {
                         'partner_id': partner.id,
                         'pricelist_id': pricelist.id if pricelist else False,
@@ -162,14 +161,13 @@ class ImportRentalOrdersWizard(models.TransientModel):
                         'rental_return_date': order_data['date_end'],
                         'is_rental_order': True,
                     }
-                    order = RentalOrder.create(order_vals)
+                    order = RentalOrder.with_context(in_rental_app=True).create(order_vals)
                     # Crear líneas antes de confirmar
                     lines_created = 0
-                    picking_products = []
                     for line in order_data['lines']:
-                        product = Product.search([('name', '=', line['product_name'])], limit=1)
+                        product = Product.search([('name', '=', line['product_name']), ('rent_ok', '=', True)], limit=1)
                         if not product:
-                            log_messages.append(f'  └─ Producto no encontrado: {line["product_name"]} (pedido {origin})')
+                            log_messages.append(f'  └─ Producto no encontrado o no alquilable: {line["product_name"]} (pedido {origin})')
                             continue
                         line_vals = {
                             'order_id': order.id,
@@ -177,6 +175,7 @@ class ImportRentalOrdersWizard(models.TransientModel):
                             'product_uom_qty': float(line['qty']),
                             'price_unit': float(line['price']) if line['price'] else product.list_price,
                             'tax_ids': [(6, 0, [])],
+                            'is_rental': True,
                         }
                         if line['iva']:
                             try:
@@ -186,79 +185,9 @@ class ImportRentalOrdersWizard(models.TransientModel):
                                     line_vals['tax_ids'] = [(6, 0, [tax.id])]
                             except Exception as e:
                                 log_messages.append(f'  └─ Error interpretando IVA: {line["iva"]} (pedido {origin})')
-                        RentalOrderLine.create(line_vals)
+                        RentalOrderLine.with_context(in_rental_app=True).create(line_vals)
                         lines_created += 1
-                        picking_products.append((product, float(line['qty'])))
-                    # Confirmar el pedido automáticamente
                     order.action_confirm()
-                    # Crear y programar la entrega (picking de salida) y la recogida (picking de entrada)
-                    for picking in order.picking_ids:
-                        if picking.picking_type_code == 'outgoing':
-                            picking.scheduled_date = order.rental_start_date
-                            picking.date_deadline = order.rental_start_date
-                            picking.write({
-                                'scheduled_date': order.rental_start_date,
-                                'date_deadline': order.rental_start_date,
-                            })
-                            _logger.info(f"[FECHA] Entrega: {picking.name} - scheduled_date={picking.scheduled_date} (esperado: {order.rental_start_date})")
-                        elif picking.picking_type_code == 'incoming':
-                            picking.scheduled_date = order.rental_return_date
-                            picking.date_deadline = order.rental_return_date
-                            picking.write({
-                                'scheduled_date': order.rental_return_date,
-                                'date_deadline': order.rental_return_date,
-                            })
-                            _logger.info(f"[FECHA] Recogida: {picking.name} - scheduled_date={picking.scheduled_date} (esperado: {order.rental_return_date})")
-                    # Si no existe recogida, crearla manualmente
-                    has_incoming = any(p.picking_type_code == 'incoming' for p in order.picking_ids)
-                    if not has_incoming:
-                        incoming_type = StockPickingType.search([('code', '=', 'incoming')], limit=1)
-                        if incoming_type:
-                            picking_vals = {
-                                'partner_id': partner.id,
-                                'picking_type_id': incoming_type.id,
-                                'origin': order.name,
-                                'scheduled_date': order.rental_return_date,
-                                'date_deadline': order.rental_return_date,
-                                'location_id': incoming_type.default_location_src_id.id,
-                                'location_dest_id': incoming_type.default_location_dest_id.id,
-                                'company_id': order.company_id.id,
-                            }
-                            if hasattr(StockPicking, 'sale_id'):
-                                picking_vals['sale_id'] = order.id
-                            picking = StockPicking.create(picking_vals)
-                            _logger.info(f"[FECHA] Recogida manual: {picking.name} - scheduled_date={picking.scheduled_date} (esperado: {order.rental_return_date})")
-                            move_model = self.env['stock.move']
-                            for product, qty in picking_products:
-                                move_vals = {
-                                    'product_id': product.id,
-                                    'product_uom_qty': qty,
-                                    'product_uom': product.uom_id.id,
-                                    'location_id': incoming_type.default_location_src_id.id,
-                                    'location_dest_id': incoming_type.default_location_dest_id.id,
-                                    'company_id': order.company_id.id,
-                                    'picking_id': picking.id,
-                                    'state': 'draft',
-                                }
-                                sale_line = self.env['sale.order.line'].search([
-                                    ('order_id', '=', order.id),
-                                    ('product_id', '=', product.id)
-                                ], limit=1)
-                                move_vals['sale_line_id'] = sale_line.id if sale_line else False
-                                move = move_model.create(move_vals)
-                                move._action_confirm()
-                            if hasattr(picking, '_compute_sale_id'):
-                                picking._compute_sale_id()
-                            else:
-                                picking.write({})
-                            picking.action_confirm()
-                            picking.action_assign()
-                            # Asignar la fecha de recogida después de confirmar y asignar
-                            picking.write({
-                                'scheduled_date': order.rental_return_date,
-                                'date_deadline': order.rental_return_date,
-                            })
-                            _logger.info(f"[FECHA] Recogida manual confirmada: {picking.name} - scheduled_date={picking.scheduled_date} (esperado: {order.rental_return_date})")
                     created_orders += 1
                     log_messages.append(f'Pedido de alquiler creado y confirmado: {origin} ({lines_created} líneas)')
                 except Exception as e:
