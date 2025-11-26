@@ -91,6 +91,7 @@ class ImportRentalOrdersWizard(models.TransientModel):
                 iva = self._get_cell_value(row, 9)
                 date_start = self._get_cell_value(row, 14)
                 date_end = self._get_cell_value(row, 15)
+                event_date = self._get_cell_value(row, 17)  # Celda 17 es event_date
 
                 # Normalizar fechas a datetime si son string
                 from datetime import datetime, timedelta
@@ -128,12 +129,14 @@ class ImportRentalOrdersWizard(models.TransientModel):
                         'date_start': date_start,
                         'date_end': date_end,
                         'iva': iva,
+                        'event_date': event_date,
                     }
                 orders_dict[origin]['lines'].append({
                     'product_name': product_name,
                     'qty': qty,
                     'price': price,
                     'iva': iva,
+                    'event_date': event_date,
                 })
 
             # Procesar cada pedido
@@ -155,11 +158,12 @@ class ImportRentalOrdersWizard(models.TransientModel):
                     order_vals = {
                         'partner_id': partner.id,
                         'pricelist_id': pricelist.id if pricelist else False,
-                        'origin': origin,
+                        'name': f'S{origin}',  # El número del pedido
                         'date_order': fields.Datetime.now(),
                         'rental_start_date': order_data['date_start'],
                         'rental_return_date': order_data['date_end'],
                         'is_rental_order': True,
+                        'event_date': order_data['event_date'],
                     }
                     order = RentalOrder.with_context(in_rental_app=True).create(order_vals)
                     # Crear líneas antes de confirmar
@@ -176,6 +180,7 @@ class ImportRentalOrdersWizard(models.TransientModel):
                             'price_unit': float(line['price']) if line['price'] else product.list_price,
                             'tax_ids': [(6, 0, [])],
                             'is_rental': True,
+                            'event_date': line['event_date'],
                         }
                         if line['iva']:
                             try:
@@ -189,11 +194,11 @@ class ImportRentalOrdersWizard(models.TransientModel):
                         lines_created += 1
                     order.action_confirm()
                     created_orders += 1
-                    log_messages.append(f'Pedido de alquiler creado y confirmado: {origin} ({lines_created} líneas)')
+                    log_messages.append(f'Pedido de alquiler creado y confirmado: S{origin} ({lines_created} líneas)')
                 except Exception as e:
                     error_count += 1
-                    log_messages.append(f'Pedido {origin}: ERROR - {str(e)}')
-                    _logger.error(f'Error procesando pedido {origin}: {str(e)}')
+                    log_messages.append(f'Pedido S{origin}: ERROR - {str(e)}')
+                    _logger.error(f'Error procesando pedido S{origin}: {str(e)}')
 
             summary = f"""
 RESUMEN DE IMPORTACIÓN\n{'='*50}\n✓ Pedidos creados: {created_orders}\n✗ Errores: {error_count}\n\nDETALLE:\n{'='*50}\n{chr(10).join(log_messages)}\n            """
