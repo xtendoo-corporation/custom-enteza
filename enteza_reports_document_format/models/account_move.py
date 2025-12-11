@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+# Copyright 2021 - Daniel Domínguez https://xtendoo.es/
+# Copyright 2025 - Xtendoo - Migrated to Odoo 19
+
+from odoo import api, fields, models
+
+
+class AccountMove(models.Model):
+    _inherit = "account.move"
+
+    @api.depends('invoice_line_ids.product_id.categ_id')
+    def _compute_used_categories(self):
+        for accountmove in self:
+            categories = accountmove.invoice_line_ids.mapped('product_id.categ_id')
+            accountmove.used_categories = [(6, 0, categories.ids)]
+
+    event_date = fields.Date(
+        string="Fecha Evento",
+    )
+
+    used_categories = fields.Many2many(
+        'product.category',
+        string='Categoria',
+        compute=_compute_used_categories,
+    )

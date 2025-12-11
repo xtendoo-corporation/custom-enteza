@@ -1,0 +1,56 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* enteza_reports_document_format
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 00:00+0000\n"
+"PO-Revision-Date: 2025-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: enteza_reports_document_format
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_account_move__event_date
+msgid "Fecha Evento"
+msgstr "Fecha Evento"
+
+#. module: enteza_reports_document_format
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_account_move__used_categories
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_sale_order__used_categories
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_stock_picking__stock_used_categories
+msgid "Categorías"
+msgstr "Categorías"
+
+#. module: enteza_reports_document_format
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_stock_move__product_categ_id
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_stock_move_line__product_categ_id
+msgid "Categoría"
+msgstr "Categoría"
+
+#. module: enteza_reports_document_format
+#: model:ir.model.fields,field_description:enteza_reports_document_format.field_stock_picking__client_id
+msgid "Cliente"
+msgstr "Cliente"
+
+#. module: enteza_reports_document_format
+#: model:ir.actions.report,name:enteza_reports_document_format.report_sale_order_grouped_for_categories
+msgid "Pedido/Presupuesto Agrupado"
+msgstr "Pedido/Presupuesto Agrupado"
+
+#. module: enteza_reports_document_format
+#: model:ir.actions.report,name:enteza_reports_document_format.report_stock_picking_grouped_for_categories
+msgid "Albarán Agrupado"
+msgstr "Albarán Agrupado"
+
+#. module: enteza_reports_document_format
+#: model:ir.actions.report,name:enteza_reports_document_format.report_account_move_grouped_for_categories
+msgid "Factura Agrupada"
+msgstr "Factura Agrupada"
+
