@@ -181,57 +181,57 @@
                         <!-- If has destination packages => create sections of corresponding products -->
                         <t t-if="doc.packages_count" name="has_packages">
                             <t t-set="packages" t-value="doc.move_line_ids.mapped('result_package_id')"/>
-                            <t t-foreach="packages" t-as="package">
-                                <t t-call="stock.stock_report_delivery_package_section_line"/>
-                                <t t-set="package_move_lines"
-                                   t-value="doc.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
-                                <!-- If printing lots/serial numbers => keep products in original lines -->
-                                <t t-if="has_serial_number">
-                                    <tr t-foreach="package_move_lines" t-as="move_line">
-                                        <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
-                                    </tr>
-                                </t>
-                                <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
-                                <t t-else="">
+                                    <t t-foreach="packages" t-as="package">
+                                        <t t-call="stock.stock_report_delivery_package_section_line"/>
+                                        <t t-set="package_move_lines"
+                                           t-value="doc.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
+                                        <!-- If printing lots/serial numbers => keep products in original lines -->
+                                        <t t-if="has_serial_number">
+                                            <tr t-foreach="package_move_lines" t-as="move_line">
+                                                <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                            </tr>
+                                        </t>
+                                        <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
+                                        <t t-else="">
+                                            <t t-set="aggregated_lines"
+                                               t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
+                                            <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                        </t>
+                                    </t>
+                                    <!-- Make sure we do another section for package-less products if they exist -->
+                                    <t t-set="move_lines"
+                                       t-value="doc.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
                                     <t t-set="aggregated_lines"
-                                       t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
-                                    <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                       t-value="doc.move_line_ids._get_aggregated_product_quantities(except_package=True)"/>
+                                    <t t-if="move_lines or aggregated_lines" name="no_package_move_lines">
+                                        <t t-call="stock.stock_report_delivery_no_package_section_line"
+                                           name="no_package_section"/>
+                                        <t t-if="has_serial_number">
+                                            <tr t-foreach="move_lines" t-as="move_line">
+                                                <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                            </tr>
+                                        </t>
+                                        <t t-elif="aggregated_lines">
+                                            <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                        </t>
+                                    </t>
                                 </t>
-                            </t>
-                            <!-- Make sure we do another section for package-less products if they exist -->
-                            <t t-set="move_lines"
-                               t-value="doc.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
-                            <t t-set="aggregated_lines"
-                               t-value="doc.move_line_ids._get_aggregated_product_quantities(except_package=True)"/>
-                            <t t-if="move_lines or aggregated_lines" name="no_package_move_lines">
-                                <t t-call="stock.stock_report_delivery_no_package_section_line"
-                                   name="no_package_section"/>
-                                <t t-if="has_serial_number">
-                                    <tr t-foreach="move_lines" t-as="move_line">
-                                        <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
-                                    </tr>
+                                <!-- No destination packages -->
+                                <t t-else="">
+                                    <!-- If printing lots/serial numbers => keep products in original lines -->
+                                    <t t-if="has_serial_number">
+                                        <tr t-foreach="doc.move_line_ids" t-as="move_line">
+                                            <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                        </tr>
+                                    </t>
+                                    <!-- If not printing lots/serial numbers => merge lines with same product -->
+                                    <t t-else="" name="aggregated_move_lines">
+                                        <t t-set="aggregated_lines"
+                                           t-value="doc.move_line_ids._get_aggregated_product_quantities()"/>
+                                        <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
+                                    </t>
                                 </t>
-                                <t t-elif="aggregated_lines">
-                                    <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
-                                </t>
-                            </t>
-                        </t>
-                        <!-- No destination packages -->
-                        <t t-else="">
-                            <!-- If printing lots/serial numbers => keep products in original lines -->
-                            <t t-if="has_serial_number">
-                                <tr t-foreach="doc.move_line_ids" t-as="move_line">
-                                    <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
-                                </tr>
-                            </t>
-                            <!-- If not printing lots/serial numbers => merge lines with same product -->
-                            <t t-else="" name="aggregated_move_lines">
-                                <t t-set="aggregated_lines"
-                                   t-value="doc.move_line_ids._get_aggregated_product_quantities()"/>
-                                <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
-                            </t>
-                        </t>
-                    </tbody>
+                            </tbody>
                 </table>
 
                 <t t-set="backorders"
@@ -288,5 +288,27 @@
             </div>
         </t>
     </template>
+
+<template id="stock_report_delivery_aggregated_move_lines_inherit" inherit_id="stock.stock_report_delivery_aggregated_move_lines">
+    <!-- Reemplazar cantidad pedida -->
+    <xpath expr="//td[@name='move_line_aggregated_qty_ordered']/span[1]" position="replace">
+        <span t-esc="'{0:.2f}'.format(aggregated_lines[line]['qty_ordered'])"/>
+    </xpath>
+
+    <!-- Reemplazar cantidad entregada -->
+    <xpath expr="//td[@name='move_line_aggregated_quantity']/t/span[1]" position="replace">
+        <span t-esc="'{0:.2f}'.format(aggregated_lines[line]['quantity'])"/>
+    </xpath>
+
+    <!-- Reemplazar cantidades de packaging si existen -->
+    <xpath expr="//td[@name='move_line_aggregated_qty_ordered']//span[@class='text-muted'][1]" position="replace">
+        <span class="text-muted" t-esc="'{0:.2f}'.format(aggregated_lines[line]['packaging_qty_ordered'])"/>
+    </xpath>
+
+    <xpath expr="//td[@name='move_line_aggregated_quantity']//span[@class='text-muted'][1]" position="replace">
+        <span class="text-muted" t-esc="'{0:.2f}'.format(aggregated_lines[line]['packaging_quantity'])"/>
+    </xpath>
+</template>
+
 </odoo>
 
