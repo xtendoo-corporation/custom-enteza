@@ -76,7 +76,8 @@
                         <strong>Fecha de presupuesto:</strong>
                         <p class="m-0" t-field="doc.date_order" t-options='{"widget": "date"}'/>
                     </div>
-                    <div t-if="doc.validity_date and doc.state in ['draft', 'sent']" class="col-auto col-3 mw-100 mb-2" name="expiration_date">
+                    <div t-if="doc.validity_date and doc.state in ['draft', 'sent']" class="col-auto col-3 mw-100 mb-2"
+                         name="expiration_date">
                         <strong>Expiración:</strong>
                         <p class="m-0" t-field="doc.validity_date"/>
                     </div>
@@ -88,61 +89,69 @@
 
                 <t t-set="display_discount" t-value="any(l.discount for l in doc.order_line)"/>
 
-                <table class="table table-sm o_main_table">
+                <table class="table table-sm o_main_table table-borderless">
                     <thead style="display: table-row-group">
                         <tr>
                             <th name="th_description" class="text-left">Descripción</th>
                             <th name="th_cost" class="text-right">P.Coste</th>
                             <th name="th_quantity" class="text-right">Cantidad</th>
                             <th name="th_priceunit" class="text-right">Precio</th>
-                            <th name="th_discount" t-if="display_discount" class="text-right" groups="product.group_discount_per_so_line">
+                            <th name="th_discount" t-if="display_discount" class="text-right"
+                                groups="product.group_discount_per_so_line">
                                 <span>Desc.%</span>
                             </th>
                             <th name="th_taxes" class="text-right">Impuestos</th>
                             <th name="th_subtotal" class="text-right">
-                                <span groups="account.group_show_line_subtotals_tax_excluded">Importe</span>
-                                <span groups="account.group_show_line_subtotals_tax_included">Total</span>
+                                <span>Importe</span>
                             </th>
                         </tr>
                     </thead>
                     <tbody class="sale_tbody">
                         <t t-set="current_subtotal" t-value="0"/>
                         <t t-foreach="doc.used_categories" t-as="category">
-                            <t t-set="product_grouped" t-value="doc.order_line.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id)"/>
+                            <t t-set="product_grouped"
+                               t-value="doc.order_line.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id)"/>
                             <t t-if="product_grouped">
                                 <tr>
-                                    <td t-attf-colspan="#{7 if display_discount else 6}" style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
-                                        <strong><span t-field="category.name"/></strong>
+                                    <td t-attf-colspan="#{7 if display_discount else 6}"
+                                        style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
+                                        <strong>
+                                            <span t-field="category.name"/>
+                                        </strong>
                                     </td>
                                 </tr>
                             </t>
                             <t t-foreach="product_grouped" t-as="line">
-                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
-                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_total" groups="account.group_show_line_subtotals_tax_included"/>
+                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal"
+                                   groups="account.group_show_line_subtotals_tax_excluded"/>
+                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_total"
+                                   groups="account.group_show_line_subtotals_tax_included"/>
 
                                 <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
                                     <t t-if="not line.display_type">
                                         <td name="td_name">
                                             <span t-field="line.name"/>
                                         </td>
-                                        <td name="td_coste" class="text-right">
-                                            <span t-if="line.product_id.rented_product_id" t-field="line.product_id.rented_product_id.list_price"/>
+                                        <td name="td_coste" class="text-right text-end">
+                                            <span t-if="line.is_rental" t-field="line.product_id.list_price"/>
                                         </td>
-                                        <td name="td_quantity" class="text-right">
+                                        <td name="td_quantity" class="text-right text-end">
                                             <span t-field="line.product_uom_qty"/>
                                         </td>
-                                        <td name="td_priceunit" class="text-right">
+                                        <td name="td_priceunit" class="text-right text-end">
                                             <span t-field="line.price_unit"/>
                                         </td>
-                                        <td t-if="display_discount" class="text-right" groups="product.group_discount_per_so_line">
+                                        <td t-if="display_discount" class="text-right text-end"
+                                            groups="product.group_discount_per_so_line">
                                             <span t-field="line.discount"/>
                                         </td>
                                         <td name="td_taxes" class="text-right">
-                                            <span t-out="', '.join(map(lambda x: (x.description or x.name), line.tax_id))"/>
+                                            <span
+                                                t-esc="', '.join(map(lambda x: (x.description or x.name).split('(')[0].strip() if '(' in (x.description or x.name) else (x.description or x.name), line.tax_ids))"
+                                                id="line_tax_ids"/>
                                         </td>
-                                        <td name="td_subtotal" class="text-right o_price_total">
-                                            <span t-field="line.price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
-                                            <span t-field="line.price_total" groups="account.group_show_line_subtotals_tax_included"/>
+                                        <td name="td_subtotal" class="text-end o_price_total">
+                                            <span t-field="line.price_subtotal">27.00</span>
                                         </td>
                                     </t>
                                     <t t-elif="line.display_type == 'line_section'">
@@ -166,7 +175,7 @@
                 <div class="clearfix" name="so_total_summary">
                     <div id="total" class="row" name="total">
                         <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ms-auto">
-                            <table class="table table-sm">
+                            <table class="table table-sm table-borderless">
                                 <t t-set="tax_totals" t-value="doc.tax_totals"/>
                                 <t t-set="currency" t-value="doc.currency_id"/>
                                 <t t-call="account.document_tax_totals"/>

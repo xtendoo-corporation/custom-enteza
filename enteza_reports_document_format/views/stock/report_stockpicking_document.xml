@@ -5,8 +5,10 @@
         <field name="model">stock.picking</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">enteza_reports_document_format.format_report_stock_picking_grouped_for_categories</field>
-        <field name="report_file">enteza_reports_document_format.format_report_stock_picking_grouped_for_categories</field>
-        <field name="print_report_name">'Albarán Agrupado - %s - %s' % (object.partner_id.name or '', object.name)</field>
+        <field name="report_file">enteza_reports_document_format.format_report_stock_picking_grouped_for_categories
+        </field>
+        <field name="print_report_name">'Albarán Agrupado - %s - %s' % (object.partner_id.name or '', object.name)
+        </field>
         <field name="binding_model_id" ref="stock.model_stock_picking"/>
         <field name="binding_type">report</field>
     </record>
@@ -27,12 +29,17 @@
             <t t-set="address">
                 <div name="div_outgoing_address">
                     <div t-if="doc.picking_type_id.code == 'outgoing' and doc.move_ids and doc.move_ids[0].partner_id">
-                        <span><strong>Dirección de entrega:</strong></span>
+                        <span>
+                            <strong>Dirección de entrega:</strong>
+                        </span>
                         <div t-field="doc.move_ids[0].partner_id"
                              t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
                     </div>
-                    <div t-elif="doc.picking_type_id.code != 'internal' and doc.picking_type_id.warehouse_id.partner_id">
-                        <span><strong>Dirección de facturación:</strong></span>
+                    <div
+                        t-elif="doc.picking_type_id.code != 'internal' and doc.picking_type_id.warehouse_id.partner_id">
+                        <span>
+                            <strong>Dirección de facturación:</strong>
+                        </span>
                         <div t-field="doc.picking_type_id.warehouse_id.partner_id"
                              t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True, "phone_icons": True}'/>
                     </div>
@@ -44,11 +51,16 @@
                     <div class="col-7" name="div_incoming_address">
                         <t t-set="show_partner" t-value="False"/>
                         <div t-if="doc.picking_type_id.code=='incoming' and partner">
-                            <span><strong>Dirección del vendedor:</strong></span>
+                            <span>
+                                <strong>Dirección del vendedor:</strong>
+                            </span>
                             <t t-set="show_partner" t-value="True"/>
                         </div>
-                        <div t-if="doc.picking_type_id.code=='outgoing' and partner and partner != partner.commercial_partner_id">
-                            <span><strong>Dirección del cliente:</strong></span>
+                        <div
+                            t-if="doc.picking_type_id.code=='outgoing' and partner and partner != partner.commercial_partner_id">
+                            <span>
+                                <strong>Dirección del cliente:</strong>
+                            </span>
                             <t t-set="show_partner" t-value="True"/>
                         </div>
                         <div t-if="show_partner" name="partner_header">
@@ -67,20 +79,20 @@
                 <h2>
                     <span t-field="doc.name"/>
                 </h2>
-                <div class="row mt32 mb32">
-                    <div t-if="doc.sale_id.partner_id" class="col-auto" name="div_client">
+                <div id="informations" class="row mt-4 mb-4">
+                    <div t-if="doc.sale_id.partner_id" class="col-auto col-3 mw-100 mb-2" name="div_client">
                         <strong>Cliente:</strong>
                         <p t-field="doc.sale_id.partner_id.name"/>
                     </div>
-                    <div t-if="doc.sale_id.event_date" class="col-auto" name="div_event_date">
+                    <div t-if="doc.sale_id.event_date" class="col-auto col-3 mw-100 mb-2" name="div_event_date">
                         <strong>Fecha del Evento:</strong>
                         <p t-field="doc.sale_id.event_date"/>
                     </div>
-                    <div t-if="doc.origin" class="col-auto" name="div_origin">
+                    <div t-if="doc.origin" class="col-auto col-3 mw-100 mb-2" name="div_origin">
                         <strong>Pedido:</strong>
                         <p t-field="doc.origin"/>
                     </div>
-                    <div t-if="doc.state" class="col-auto" name="div_sched_date">
+                    <div t-if="doc.state" class="col-auto col-3 mw-100 mb-2" name="div_sched_date">
                         <strong>Fecha de envío:</strong>
                         <t t-if="doc.state == 'done'">
                             <p t-field="doc.date_done"/>
@@ -91,7 +103,7 @@
                     </div>
                 </div>
 
-                <table class="table table-sm" t-if="doc.state != 'done'" name="stock_move_table">
+                <table class="table table-sm table-borderless" t-if="doc.state != 'done'" name="stock_move_table">
                     <thead>
                         <tr>
                             <th name="th_sm_product">
@@ -107,11 +119,15 @@
                     </thead>
                     <tbody>
                         <t t-foreach="doc.stock_used_categories" t-as="category">
-                            <t t-set="product_grouped" t-value="doc.move_ids.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id and l.product_uom_qty)"/>
+                            <t t-set="product_grouped"
+                               t-value="doc.move_ids.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id and l.product_uom_qty)"/>
                             <t t-if="product_grouped">
                                 <tr>
-                                    <td colspan="3" style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
-                                        <strong><span t-field="category.name"/></strong>
+                                    <td colspan="3"
+                                        style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
+                                        <strong>
+                                            <span t-field="category.name"/>
+                                        </strong>
                                     </td>
                                 </tr>
                             </t>
@@ -137,8 +153,10 @@
                     </tbody>
                 </table>
 
-                <table class="table table-sm mt48" t-if="doc.move_line_ids and doc.state == 'done'" name="stock_move_line_table">
-                    <t t-set="has_serial_number" t-value="doc.move_line_ids.lot_id" groups="stock.group_lot_on_delivery_slip"/>
+                <table class="table table-sm mt48 table-borderless" t-if="doc.move_line_ids and doc.state == 'done'"
+                       name="stock_move_line_table">
+                    <t t-set="has_serial_number" t-value="doc.move_line_ids.lot_id"
+                       groups="stock.group_lot_on_delivery_slip"/>
                     <thead>
                         <tr>
                             <th name="th_sml_product">
@@ -156,25 +174,38 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <t t-if="doc.package_ids">
-                            <t t-set="packages" t-value="doc.move_line_ids.result_package_id"/>
+                        <!-- This part gets complicated with different use cases (additional use cases in extensions of this report):
+                                1. If serial numbers are used and set to print on delivery slip => print lines as is, otherwise group them by overlapping
+                                    product + description + uom combinations
+                                2. If any packages are assigned => split products up by package (or non-package) and then apply use case 1 -->
+                        <!-- If has destination packages => create sections of corresponding products -->
+                        <t t-if="doc.packages_count" name="has_packages">
+                            <t t-set="packages" t-value="doc.move_line_ids.mapped('result_package_id')"/>
                             <t t-foreach="packages" t-as="package">
                                 <t t-call="stock.stock_report_delivery_package_section_line"/>
-                                <t t-set="package_move_lines" t-value="doc.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
+                                <t t-set="package_move_lines"
+                                   t-value="doc.move_line_ids.filtered(lambda l: l.result_package_id == package)"/>
+                                <!-- If printing lots/serial numbers => keep products in original lines -->
                                 <t t-if="has_serial_number">
                                     <tr t-foreach="package_move_lines" t-as="move_line">
                                         <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
                                     </tr>
                                 </t>
+                                <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
                                 <t t-else="">
-                                    <t t-set="aggregated_lines" t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
+                                    <t t-set="aggregated_lines"
+                                       t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
                                     <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
                                 </t>
                             </t>
-                            <t t-set="move_lines" t-value="doc.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
-                            <t t-set="aggregated_lines" t-value="doc.move_line_ids._get_aggregated_product_quantities(except_package=True)"/>
-                            <t t-if="move_lines or aggregated_lines">
-                                <t t-call="stock.stock_report_delivery_no_package_section_line"/>
+                            <!-- Make sure we do another section for package-less products if they exist -->
+                            <t t-set="move_lines"
+                               t-value="doc.move_line_ids.filtered(lambda l: not l.result_package_id)"/>
+                            <t t-set="aggregated_lines"
+                               t-value="doc.move_line_ids._get_aggregated_product_quantities(except_package=True)"/>
+                            <t t-if="move_lines or aggregated_lines" name="no_package_move_lines">
+                                <t t-call="stock.stock_report_delivery_no_package_section_line"
+                                   name="no_package_section"/>
                                 <t t-if="has_serial_number">
                                     <tr t-foreach="move_lines" t-as="move_line">
                                         <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
@@ -185,26 +216,32 @@
                                 </t>
                             </t>
                         </t>
+                        <!-- No destination packages -->
                         <t t-else="">
+                            <!-- If printing lots/serial numbers => keep products in original lines -->
                             <t t-if="has_serial_number">
                                 <tr t-foreach="doc.move_line_ids" t-as="move_line">
                                     <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
                                 </tr>
                             </t>
-                            <t t-else="">
-                                <t t-set="aggregated_lines" t-value="doc.move_line_ids._get_aggregated_product_quantities()"/>
+                            <!-- If not printing lots/serial numbers => merge lines with same product -->
+                            <t t-else="" name="aggregated_move_lines">
+                                <t t-set="aggregated_lines"
+                                   t-value="doc.move_line_ids._get_aggregated_product_quantities()"/>
                                 <t t-call="stock.stock_report_delivery_aggregated_move_lines"/>
                             </t>
                         </t>
                     </tbody>
                 </table>
 
-                <t t-set="backorders" t-value="doc.backorder_ids.filtered(lambda x: x.state not in ('done', 'cancel'))"/>
+                <t t-set="backorders"
+                   t-value="doc.backorder_ids.filtered(lambda x: x.state not in ('done', 'cancel'))"/>
                 <t t-if="backorders">
                     <p class="mt-5">
                         <span>Cantidad restante que no ha sido entregada:</span>
                     </p>
-                    <table class="table table-sm" name="stock_backorder_table" style="table-layout: fixed;">
+                    <table class="table table-sm table-borderless" name="stock_backorder_table"
+                           style="table-layout: fixed;">
                         <thead>
                             <tr>
                                 <th name="th_sb_product">
@@ -227,7 +264,7 @@
                                         </p>
                                     </td>
                                     <td/>
-                                    <td class="text-center w-auto">
+                                    <td class="text-right text-end">
                                         <span t-field="bo_line.product_uom_qty"/>
                                         <span t-field="bo_line.product_uom"/>
                                     </td>
