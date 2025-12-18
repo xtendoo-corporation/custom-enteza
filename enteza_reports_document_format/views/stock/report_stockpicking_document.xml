@@ -113,41 +113,68 @@
                                 <strong>Pedidos</strong>
                             </th>
                             <th name="th_sm_quantity" class="text-right">
-                                <strong>Entregados</strong>
+                                <strong>Reservados</strong>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        <t t-foreach="doc.stock_used_categories" t-as="category">
-                            <t t-set="product_grouped"
-                               t-value="doc.move_ids.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id and l.product_uom_qty)"/>
-                            <t t-if="product_grouped">
+                        <!-- Agrupar por ubicación (location_id) y luego por categoría -->
+                        <t t-foreach="doc.stock_used_locations" t-as="location">
+                            <t t-set="location_move_lines"
+                               t-value="doc.move_line_ids.filtered(lambda l: l.location_id == location)"/>
+                            <t t-if="location_move_lines">
+                                <!-- Mostrar cabecera de ubicación -->
                                 <tr>
                                     <td colspan="3"
-                                        style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
-                                        <strong>
-                                            <span t-field="category.name"/>
-                                        </strong>
+                                        style="text-align:left;border-bottom:3px solid #000;border-top:3px solid #000;background:#c5cad1;font-size:1.1em;">
+                                        <strong><span t-field="location.complete_name"/></strong>
                                     </td>
                                 </tr>
-                            </t>
-                            <t t-foreach="product_grouped" t-as="move">
-                                <tr>
-                                    <td>
-                                        <span t-field="move.product_id"/>
-                                        <p t-if="move.description_picking != move.product_id.name and move.description_picking != move.product_id.display_name">
-                                            <span t-field="move.description_picking"/>
-                                        </p>
-                                    </td>
-                                    <td class="text-right">
-                                        <span t-field="move.product_uom_qty"/>
-                                    </td>
-                                    <td class="text-right">
-                                        <t t-if="move.quantity != 0">
-                                            <span t-field="move.quantity"/>
+
+                                <!-- Iterar por categorías dentro de esta ubicación -->
+                                <t t-foreach="doc.stock_used_categories" t-as="category">
+                                    <t t-set="category_move_lines"
+                                       t-value="location_move_lines.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id)"/>
+                                    <t t-if="category_move_lines">
+                                        <!-- Mostrar cabecera de categoría -->
+                                        <tr>
+                                            <td colspan="3"
+                                                style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb;padding-left:20px;">
+                                                <strong>
+                                                    <span t-field="category.name"/>
+                                                </strong>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Mostrar productos (agrupados por producto) -->
+                                        <t t-set="shown_products" t-value="set()"/>
+                                        <t t-foreach="category_move_lines" t-as="move_line">
+                                            <t t-set="product_key" t-value="str(move_line.product_id.id)"/>
+                                            <t t-if="product_key not in shown_products">
+                                                <t t-set="dummy" t-value="shown_products.add(product_key)"/>
+                                                <!-- Calcular totales para este producto -->
+                                                <t t-set="same_product_lines" t-value="category_move_lines.filtered(lambda l: l.product_id == move_line.product_id)"/>
+                                                <t t-set="total_qty" t-value="sum(same_product_lines.mapped('quantity'))"/>
+                                                <t t-set="total_ordered" t-value="sum(same_product_lines.mapped('move_id.product_uom_qty'))"/>
+
+                                                <tr>
+                                                    <td style="padding-left:30px;">
+                                                        <span t-field="move_line.product_id.display_name"/>
+                                                        <p t-if="move_line.description_picking and move_line.description_picking != move_line.product_id.name and move_line.description_picking != move_line.product_id.display_name">
+                                                            <span t-field="move_line.description_picking"/>
+                                                        </p>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{0:.2f}'.format(total_ordered)"/>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span t-esc="'{0:.2f}'.format(total_qty)"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
                                         </t>
-                                    </td>
-                                </tr>
+                                    </t>
+                                </t>
                             </t>
                         </t>
                     </tbody>
@@ -174,72 +201,87 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Agrupar por categorías -->
-                        <t t-foreach="doc.stock_used_categories" t-as="category">
-                            <t t-set="category_move_lines"
-                               t-value="doc.move_line_ids.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id)"/>
-                            <t t-if="category_move_lines">
-                                <!-- Mostrar cabecera de categoría -->
+                        <!-- Agrupar por ubicación y luego por categorías -->
+                        <t t-foreach="doc.stock_used_locations" t-as="location">
+                            <t t-set="location_move_lines"
+                               t-value="doc.move_line_ids.filtered(lambda l: l.location_id == location)"/>
+                            <t t-if="location_move_lines">
+                                <!-- Mostrar cabecera de ubicación -->
                                 <tr>
                                     <td t-attf-colspan="#{4 if has_serial_number else 3}"
-                                        style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb">
-                                        <strong>
-                                            <span t-field="category.name"/>
-                                        </strong>
+                                        style="text-align:left;border-bottom:3px solid #000;border-top:3px solid #000;background:#c5cad1;font-size:1.1em;">
+                                        <strong><span t-field="location.complete_name"/></strong>
                                     </td>
                                 </tr>
 
-                                <!-- Procesar líneas de esta categoría -->
-                                <t t-if="doc.packages_count" name="has_packages">
-                                    <t t-set="packages" t-value="category_move_lines.mapped('result_package_id')"/>
-                                    <t t-foreach="packages" t-as="package">
-                                        <t t-call="stock.stock_report_delivery_package_section_line"/>
-                                        <t t-set="package_move_lines"
-                                           t-value="category_move_lines.filtered(lambda l: l.result_package_id == package)"/>
-                                        <!-- If printing lots/serial numbers => keep products in original lines -->
-                                        <t t-if="has_serial_number">
-                                            <tr t-foreach="package_move_lines" t-as="move_line">
-                                                <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
-                                            </tr>
-                                        </t>
-                                        <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
-                                        <t t-else="">
-                                            <t t-set="aggregated_lines"
-                                               t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
-                                            <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
-                                        </t>
-                                    </t>
-                                    <!-- Make sure we do another section for package-less products if they exist -->
-                                    <t t-set="move_lines"
-                                       t-value="category_move_lines.filtered(lambda l: not l.result_package_id)"/>
-                                    <t t-set="aggregated_lines"
-                                       t-value="category_move_lines._get_aggregated_product_quantities(except_package=True)"/>
-                                    <t t-if="move_lines or aggregated_lines" name="no_package_move_lines">
-                                        <t t-call="stock.stock_report_delivery_no_package_section_line"
-                                           name="no_package_section"/>
-                                        <t t-if="has_serial_number">
-                                            <tr t-foreach="move_lines" t-as="move_line">
-                                                <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
-                                            </tr>
-                                        </t>
-                                        <t t-elif="aggregated_lines">
-                                            <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
-                                        </t>
-                                    </t>
-                                </t>
-                                <!-- No destination packages -->
-                                <t t-else="">
-                                    <!-- If printing lots/serial numbers => keep products in original lines -->
-                                    <t t-if="has_serial_number">
-                                        <tr t-foreach="category_move_lines" t-as="move_line">
-                                            <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                <!-- Iterar por categorías dentro de esta ubicación -->
+                                <t t-foreach="doc.stock_used_categories" t-as="category">
+                                    <t t-set="category_move_lines"
+                                       t-value="location_move_lines.filtered(lambda l: l.product_id and l.product_id.categ_id and l.product_id.categ_id.id == category.id)"/>
+                                    <t t-if="category_move_lines">
+                                        <!-- Mostrar cabecera de categoría -->
+                                        <tr>
+                                            <td t-attf-colspan="#{4 if has_serial_number else 3}"
+                                                style="text-align:left;border-bottom:2px solid black;border-top:2px solid black;background:#e1e5eb;padding-left:20px;">
+                                                <strong>
+                                                    <span t-field="category.name"/>
+                                                </strong>
+                                            </td>
                                         </tr>
-                                    </t>
-                                    <!-- If not printing lots/serial numbers => merge lines with same product -->
-                                    <t t-else="" name="aggregated_move_lines">
-                                        <t t-set="aggregated_lines"
-                                           t-value="category_move_lines._get_aggregated_product_quantities()"/>
-                                        <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
+
+                                        <!-- Procesar líneas de esta categoría -->
+                                        <t t-if="doc.packages_count" name="has_packages">
+                                            <t t-set="packages" t-value="category_move_lines.mapped('result_package_id')"/>
+                                            <t t-foreach="packages" t-as="package">
+                                                <t t-call="stock.stock_report_delivery_package_section_line"/>
+                                                <t t-set="package_move_lines"
+                                                   t-value="category_move_lines.filtered(lambda l: l.result_package_id == package)"/>
+                                                <!-- If printing lots/serial numbers => keep products in original lines -->
+                                                <t t-if="has_serial_number">
+                                                    <tr t-foreach="package_move_lines" t-as="move_line">
+                                                        <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                                    </tr>
+                                                </t>
+                                                <!-- If not printing lots/serial numbers => merge lines with same product+description+uom -->
+                                                <t t-else="">
+                                                    <t t-set="aggregated_lines"
+                                                       t-value="package_move_lines._get_aggregated_product_quantities(strict=True)"/>
+                                                    <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
+                                                </t>
+                                            </t>
+                                            <!-- Make sure we do another section for package-less products if they exist -->
+                                            <t t-set="move_lines"
+                                               t-value="category_move_lines.filtered(lambda l: not l.result_package_id)"/>
+                                            <t t-set="aggregated_lines"
+                                               t-value="category_move_lines._get_aggregated_product_quantities(except_package=True)"/>
+                                            <t t-if="move_lines or aggregated_lines" name="no_package_move_lines">
+                                                <t t-call="stock.stock_report_delivery_no_package_section_line"
+                                                   name="no_package_section"/>
+                                                <t t-if="has_serial_number">
+                                                    <tr t-foreach="move_lines" t-as="move_line">
+                                                        <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                                    </tr>
+                                                </t>
+                                                <t t-elif="aggregated_lines">
+                                                    <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
+                                                </t>
+                                            </t>
+                                        </t>
+                                        <!-- No destination packages -->
+                                        <t t-else="">
+                                            <!-- If printing lots/serial numbers => keep products in original lines -->
+                                            <t t-if="has_serial_number">
+                                                <tr t-foreach="category_move_lines" t-as="move_line">
+                                                    <t t-call="stock.stock_report_delivery_has_serial_move_line"/>
+                                                </tr>
+                                            </t>
+                                            <!-- If not printing lots/serial numbers => merge lines with same product -->
+                                            <t t-else="" name="aggregated_move_lines">
+                                                <t t-set="aggregated_lines"
+                                                   t-value="category_move_lines._get_aggregated_product_quantities()"/>
+                                                <t t-call="enteza_reports_document_format.stock_report_delivery_aggregated_move_lines_inherit"/>
+                                            </t>
+                                        </t>
                                     </t>
                                 </t>
                             </t>
