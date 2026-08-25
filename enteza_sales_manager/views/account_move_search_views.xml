@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Añade el campo Responsable de venta a las búsquedas/agrupar de facturas (account.move) -->
+  <!-- Inherit account invoice search view so the field appears in Filters / Group By in Customer Invoices -->
+  <record id="view_account_invoice_filter_inherit_enteza_sale_responsible" model="ir.ui.view">
+    <field name="name">account.invoice.select.enteza.sale_responsible</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_account_invoice_filter"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='invoice_user_id']" position="after">
+        <field name="sale_responsible_id" string="Responsable de venta"/>
+      </xpath>
+      <!-- Añadimos opción de Agrupar por -->
+      <xpath expr="//group" position="inside">
+        <filter string="Responsable de venta" name="group_by_sale_responsible" context="{'group_by':'sale_responsible_id'}"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Inherit generic account move search view (used in Journal Entries / other lists) -->
+  <record id="view_account_move_filter_inherit_enteza_sale_responsible" model="ir.ui.view">
+    <field name="name">account.move.select.enteza.sale_responsible</field>
+    <field name="model">account.move</field>
+    <field name="inherit_id" ref="account.view_account_move_filter"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='partner_id']" position="after">
+        <field name="sale_responsible_id" string="Responsable de venta"/>
+      </xpath>
+      <xpath expr="//group" position="inside">
+        <filter string="Responsable de venta" name="group_by_sale_responsible" context="{'group_by':'sale_responsible_id'}"/>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Inherit sale.order search view so the field appears in Sales / Rentals lists -->
+  <record id="view_sale_order_search_inherit_enteza_sale_responsible" model="ir.ui.view">
+    <field name="name">sale.order.list.select.enteza.sale_responsible</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='user_id']" position="after">
+        <field name="sale_responsible_id"/>
+      </xpath>
+      <xpath expr="//group" position="inside">
+        <filter string="Responsable de venta" name="group_by_sale_responsible" context="{'group_by':'sale_responsible_id'}"/>
+      </xpath>
+    </field>
+  </record>
+
+  <record id="view_rental_order_search_inherit_enteza_sale_responsible" model="ir.ui.view">
+    <field name="name">rental.order.search.enteza.sale_responsible</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale_renting.rental_order_view_search"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='user_id']" position="after">
+        <field name="sale_responsible_id"/>
+      </xpath>
+      <xpath expr="//group" position="inside">
+        <filter string="Responsable de venta" name="group_by_sale_responsible_rental" context="{'group_by':'sale_responsible_id'}"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
+

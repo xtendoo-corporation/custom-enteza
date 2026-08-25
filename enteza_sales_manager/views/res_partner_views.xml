@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Añadir campo Responsable de venta en el formulario de contactos -->
+  <record id="view_partner_form_inherit_enteza_sales" model="ir.ui.view">
+    <field name="name">res.partner.form.enteza.sales</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='user_id']" position="after">
+        <field name="sale_responsible_id"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
+

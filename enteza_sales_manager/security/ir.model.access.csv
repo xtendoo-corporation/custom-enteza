@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_enteza_res_partner,access_enteza_res_partner,base.model_res_partner,base.group_user,1,1,1,0
+access_enteza_account_move,access_enteza_account_move,account.model_account_move,account.group_account_user,1,1,1,0
+access_enteza_sale_order,access_enteza_sale_order,sale.model_sale_order,base.group_user,1,1,1,0
