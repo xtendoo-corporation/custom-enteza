@@ -30,3 +30,4 @@ class AccountMove(models.Model):
                     # no romper si el partner no es escribible por permisos
                     pass
 
+
