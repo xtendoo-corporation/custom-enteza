@@ -8,7 +8,7 @@ class AccountMoveLine(models.Model):
     sale_responsible_id = fields.Many2one(
         'res.users',
         string='Responsable de venta',
-        related='move_id.sale_responsible_id',
+        related='partner_id.sale_responsible_id',
         store=True,
         index=True,
         readonly=False,
