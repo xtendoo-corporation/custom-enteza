@@ -44,6 +44,25 @@ class AccountMoveLine(models.Model):
                 except Exception:
                     pass
 
+    def action_recompute_sale_responsible(self):
+        """Recalcula 'Responsable de venta' bajo demanda.
+
+        Pensado para apuntes que nunca dispararon el compute porque se
+        crearon fuera del ORM (asientos de apertura de una migración
+        OpenUpgrade, importaciones directas, etc.) y por tanto se quedaron
+        con el campo vacío aunque el partner ya tuviera un responsable
+        asignado.
+
+        - Si se lanza con una selección de apuntes (desde el menú de
+          acciones de la lista), recalcula solo esos.
+        - Si se lanza sin selección, recalcula todos los apuntes (y sus
+          asientos) que todavía tengan el campo vacío.
+        """
+        lines = self if self else self.search([('sale_responsible_id', '=', False)])
+        lines._compute_sale_responsible()
+        lines.move_id._compute_sale_responsible()
+        return True
+
 
 
 
