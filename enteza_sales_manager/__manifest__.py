@@ -1,6 +1,6 @@
 {
     'name': 'Enteza Sales Manager',
-    'version': '1.1.0',
+    'version': '1.2.0',
     'summary': 'Añade Responsable de venta en contactos y facturas',
     'category': 'Sales',
     'author': 'enteza',
